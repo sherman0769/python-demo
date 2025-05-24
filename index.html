@@ -54,6 +54,12 @@ function showOptions(text){
   });
 }
 
+function stripOptions(text){
+  return text.split(/\n+/)
+    .filter(line => !line.trim().match(/^([ABC])[\.\)\s\u3001\uFF0E\uFF61]?\s*(.+)/))
+    .join('\n');
+}
+
 function newGame(){
   history = [];
   localStorage.removeItem(histKey);
@@ -80,8 +86,8 @@ async function send(){
   const data = await res.json();
   if(data.error){ add("⚠️ "+data.error,"系統"); return;}
 
-  add(data.reply,"GM");
   showOptions(data.reply);
+  add(stripOptions(data.reply),"GM");
   history = data.history;
   localStorage.setItem(histKey, JSON.stringify(history));
 }
