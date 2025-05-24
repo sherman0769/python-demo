@@ -4,7 +4,7 @@ from http.server import BaseHTTPRequestHandler
 import google.generativeai as genai
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 SYSTEM_PROMPT = (
     "你是一位幽默、友善但有適度挑戰性的文字冒險 GM，"
