@@ -1,36 +1,47 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Python Demo • Hello API</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>銀河龍與地城 ‧ AI RPG</title>
 <style>
-  body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-       display:flex;flex-direction:column;align-items:center;gap:1rem;
-       padding:2rem;color:#222;background:#f7f7f7}
-  button{padding:.6rem 1.2rem;font-size:1rem;border:0;border-radius:6px;
-         background:#0070f3;color:#fff;cursor:pointer}
-  pre{padding:1rem;background:#fff;border-radius:6px;max-width:400px;
-      box-shadow:0 2px 4px rgba(0,0,0,.06);white-space:pre-wrap}
+body{font-family:system-ui;padding:0 1rem;max-width:640px;margin:auto}
+#log{white-space:pre-wrap;background:#f7f7f7;padding:1rem;border-radius:8px;height:60vh;overflow:auto}
+#msg{width:100%;padding:.6rem;border-radius:6px;border:1px solid #ccc;margin-top:.5rem}
+button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;background:#0070f3;color:#fff}
 </style>
-</head>
-<body>
-  <h1>🚀 Hello API Demo</h1>
-  <button id="call">呼叫 /api/hello</button>
-  <pre id="output">（點擊按鈕取得回應）</pre>
+<h1>🪐 銀河龍與地城 • 文字冒險</h1>
+
+<div id="log">(故事開始！請輸入你的動作…)</div>
+
+<input id="msg" placeholder="輸入動作，例如：『我舉劍衝向機械巨龍』"/>
+<button id="send">送出</button>
 
 <script>
-document.getElementById('call').onclick = async () => {
-  const out = document.getElementById('output');
-  out.textContent = 'Loading...';
-  try {
-    const res = await fetch('/api/hello');
-    const json = await res.json();
-    out.textContent = JSON.stringify(json, null, 2);
-  } catch (err) {
-    out.textContent = 'Error: ' + err;
-  }
-};
+const log   = document.getElementById('log');
+const msgIn = document.getElementById('msg');
+const histKey = "rpg_history";
+
+let history = JSON.parse(localStorage.getItem(histKey) || "[]");
+
+function add(text, who){
+  log.textContent += `\n\n【${who}】\n`+ text;
+  log.scrollTop = log.scrollHeight;
+}
+
+async function send(){
+  const user = msgIn.value.trim();
+  if(!user) return;
+  add(user,"你");
+  msgIn.value = "";
+  const body = JSON.stringify({user, history});
+  const res  = await fetch("/api/rpg",{method:"POST",body});
+  const data = await res.json();
+  if(data.error){ add("⚠️ "+data.error,"系統"); return;}
+  add(data.reply,"GM");
+  history = data.history;
+  localStorage.setItem(histKey, JSON.stringify(history));
+}
+
+document.getElementById('send').onclick = send;
+msgIn.addEventListener("keydown", e=>{ if(e.key==="Enter") send();});
 </script>
-</body>
-</html>
