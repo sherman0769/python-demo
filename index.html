@@ -9,7 +9,6 @@ h1{display:flex;align-items:center;gap:.4rem}
 #log{white-space:pre-wrap;background:#f7f7f7;padding:1rem;
      border-radius:8px;height:55vh;overflow:auto}
 #options{margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap}
-#scene{max-width:100%;border-radius:8px;margin-top:1rem;display:none}
 #msg{width:100%;padding:.6rem;border-radius:6px;border:1px solid #ccc;margin-top:.8rem}
 button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;background:#0070f3;color:#fff}
 </style>
@@ -17,7 +16,6 @@ button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;backgrou
 
 <div id="log">(故事開始！請輸入你的動作…)</div>
 <div id="options"></div>
-<img id="scene">
 
 <input id="msg" placeholder="輸入動作／例如：『我舉劍衝向機械巨龍』"/>
 <button id="send">送出</button>
@@ -25,7 +23,6 @@ button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;backgrou
 
 <script>
 const log   = document.getElementById('log');
-const img   = document.getElementById('scene');
 const msgIn = document.getElementById('msg');
 const opts  = document.getElementById('options');
 const histKey="rpg_history";
@@ -55,7 +52,7 @@ function showOptions(text){
 }
 
 async function send(){
-  if(send.cooldown) return;          // 5 秒冷卻避免爆量產圖
+  if(send.cooldown) return;          // 5 秒冷卻避免伺服器過載
   send.cooldown = true; setTimeout(()=>send.cooldown=false,5000);
 
   opts.innerHTML = '';
@@ -74,13 +71,6 @@ async function send(){
 
   add(data.reply,"GM");
   showOptions(data.reply);
-  if(data.image){
-    img.src="data:image/png;base64,"+data.image;
-    img.style.display="block";
-  } else {
-    img.style.display="none";
-    add("(插圖生成失敗)","系統");
-  }
   history = data.history;
   localStorage.setItem(histKey, JSON.stringify(history));
 }
