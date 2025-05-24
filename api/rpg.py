@@ -1,5 +1,5 @@
 # api/rpg.py
-import os, json, base64
+import os, json
 from http.server import BaseHTTPRequestHandler
 import google.generativeai as genai
 
@@ -15,23 +15,6 @@ SYSTEM_PROMPT = (
     "請使用繁體中文，且不要暴雷未來劇情。"
 )
 
-# ---------- 產圖工具 ----------
-def generate_scene_image(prompt: str) -> str | None:
-    """
-    以 prompt 生成插畫 PNG，回傳 base64 字串；失敗回 None。
-    Flash Free Tier 每小時 60 張，避免頻繁呼叫。
-    """
-    try:
-        resp = model.generate_content(
-            prompt + "。請以插畫風格呈現，16:9 構圖，PNG。",  # 引導生成圖
-            generation_config={"mime_type": "image/png"}
-        )
-        part = resp.candidates[0].content.parts[0]
-        if part.mime_type == "image/png" and part.data:
-            return base64.b64encode(part.data).decode()
-    except Exception:
-        pass
-    return None
 
 # ---------- HTTP Handler ----------
 class handler(BaseHTTPRequestHandler):
@@ -63,15 +46,11 @@ class handler(BaseHTTPRequestHandler):
             resp = model.generate_content(messages)
             gm_reply = resp.text.strip()
 
-            # 產生插圖（可能回傳 None）
-            img_b64 = generate_scene_image(gm_reply)
-
             # 更新歷史
             history.append({"user": user_input, "gm": gm_reply})
 
             self._json(200, {
                 "reply": gm_reply,
-                "image": img_b64,
                 "history": history
             })
 
