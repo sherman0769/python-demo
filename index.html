@@ -4,24 +4,33 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>銀河龍與地城 ‧ AI RPG</title>
 <style>
-body{font-family:system-ui;padding:0 1rem;max-width:640px;margin:auto}
-#log{white-space:pre-wrap;background:#f7f7f7;padding:1rem;border-radius:8px;height:60vh;overflow:auto}
-#msg{width:100%;padding:.6rem;border-radius:6px;border:1px solid #ccc;margin-top:.5rem}
+body{font-family:system-ui;padding:0 1rem;max-width:680px;margin:auto}
+h1{display:flex;align-items:center;gap:.4rem}
+#log{white-space:pre-wrap;background:#f7f7f7;padding:1rem;
+     border-radius:8px;height:55vh;overflow:auto}
+#scene{max-width:100%;border-radius:8px;margin-top:1rem;display:none}
+#msg{width:100%;padding:.6rem;border-radius:6px;border:1px solid #ccc;margin-top:.8rem}
 button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;background:#0070f3;color:#fff}
 </style>
-<h1>🪐 銀河龍與地城 • 文字冒險</h1>
+<h1>🥐 銀河龍與地城 • 文字冒險</h1>
 
 <div id="log">(故事開始！請輸入你的動作…)</div>
+<img id="scene">
 
-<input id="msg" placeholder="輸入動作，例如：『我舉劍衝向機械巨龍』"/>
+<input id="msg" placeholder="輸入動作／例如：『我舉劍衝向機械巨龍』"/>
 <button id="send">送出</button>
 
 <script>
 const log   = document.getElementById('log');
+const img   = document.getElementById('scene');
 const msgIn = document.getElementById('msg');
-const histKey = "rpg_history";
+const histKey="rpg_history";
+let history = JSON.parse(localStorage.getItem(histKey)||"[]");
 
-let history = JSON.parse(localStorage.getItem(histKey) || "[]");
+// 載入舊劇情
+history.forEach(h=>{
+  log.textContent += `\n\n【你】\n${h.user}\n\n【GM】\n${h.gm}`;
+});
 
 function add(text, who){
   log.textContent += `\n\n【${who}】\n`+ text;
@@ -29,15 +38,26 @@ function add(text, who){
 }
 
 async function send(){
+  if(send.cooldown) return;          // 5 秒冷卻避免爆量產圖
+  send.cooldown = true; setTimeout(()=>send.cooldown=false,5000);
+
   const user = msgIn.value.trim();
   if(!user) return;
   add(user,"你");
   msgIn.value = "";
-  const body = JSON.stringify({user, history});
-  const res  = await fetch("/api/rpg",{method:"POST",body});
+
+  const res = await fetch("/api/rpg",{
+    method:"POST",
+    body: JSON.stringify({user, history})
+  });
   const data = await res.json();
   if(data.error){ add("⚠️ "+data.error,"系統"); return;}
+
   add(data.reply,"GM");
+  if(data.image){
+    img.src="data:image/png;base64,"+data.image;
+    img.style.display="block";
+  }
   history = data.history;
   localStorage.setItem(histKey, JSON.stringify(history));
 }
@@ -45,3 +65,4 @@ async function send(){
 document.getElementById('send').onclick = send;
 msgIn.addEventListener("keydown", e=>{ if(e.key==="Enter") send();});
 </script>
+</html>
