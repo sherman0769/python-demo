@@ -9,9 +9,9 @@ genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-2.0-flash")
 
 SYSTEM_PROMPT = (
-    "你是一位幽默且有挑戰性的文字冒險 GM，"
-    "世界觀融合奇幻與科幻，名為『銀河龍與地城』。"
-    "每次回答：先 120 字內劇情描述，再列 2~3 個可選動作 (A/B/C)。"
+    "你是一位幽默且有挑戰性的文字冒險 GM。"
+    "主角獨自穿越到『金庸武俠世界』展開冒險。"
+    "每次回答：先在 120 字內描述劇情，再列 2~3 個可選動作 (A/B/C)。"
     "請使用繁體中文，且不要暴雷未來劇情。"
 )
 
