@@ -20,12 +20,14 @@ button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;backgrou
 
 <input id="msg" placeholder="輸入動作／例如：『我舉劍衝向機械巨龍』"/>
 <button id="send">送出</button>
+<button id="newgame">新故事</button>
 <p style="text-align:center;margin-top:1rem">遊戲設計：李詩民</p>
 
 <script>
 const log   = document.getElementById('log');
 const msgIn = document.getElementById('msg');
 const opts  = document.getElementById('options');
+const newBtn = document.getElementById('newgame');
 const histKey="rpg_history";
 let history = JSON.parse(localStorage.getItem(histKey)||"[]");
 
@@ -50,6 +52,14 @@ function showOptions(text){
       opts.appendChild(btn);
     }
   });
+}
+
+function newGame(){
+  history = [];
+  localStorage.removeItem(histKey);
+  log.textContent = '(故事開始！請輸入你的動作…)';
+  opts.innerHTML = '';
+  msgIn.value = '';
 }
 
 async function send(){
@@ -77,6 +87,7 @@ async function send(){
 }
 
 document.getElementById('send').onclick = send;
+newBtn.onclick = newGame;
 msgIn.addEventListener("keydown", e=>{ if(e.key==="Enter") send();});
 </script>
 </html>
