@@ -8,12 +8,20 @@ genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 # 使用免費額度可用的模型，速度較快
 model = genai.GenerativeModel("gemini-2.0-flash")
 
-SYSTEM_PROMPT = (
-    "你是一位幽默且有挑戰性的文字冒險 GM。"
-    "主角獨自穿越到『金庸武俠世界』展開冒險。"
-    "每次回答：先在 120 字內描述劇情，再列 2~3 個可選動作 (A/B/C)。"
-    "請使用繁體中文，且不要暴雷未來劇情。"
-)
+SCENARIOS = {
+    "jy": (
+        "你是一位幽默且有挑戰性的文字冒險 GM。"
+        "主角獨自穿越到『金庸武俠世界』展開冒險。"
+        "每次回答：先在 120 字內描述劇情，再列 2~3 個可選動作 (A/B/C)。"
+        "請使用繁體中文，且不要暴雷未來劇情。"
+    ),
+    "sg": (
+        "你是一位幽默且有挑戰性的文字冒險 GM。"
+        "主角獨自穿越到『三國時代』展開冒險。"
+        "每次回答：先在 120 字內描述劇情，再列 2~3 個可選動作 (A/B/C)。"
+        "請使用繁體中文，且不要暴雷未來劇情。"
+    ),
+}
 
 
 # ---------- HTTP Handler ----------
@@ -33,9 +41,11 @@ class handler(BaseHTTPRequestHandler):
 
             history: list[dict] = payload.get("history", [])
             user_input: str = payload.get("user", "")
+            scenario: str = payload.get("scenario", "jy")
 
             # 組 Gemini 對話
-            messages = [{"role": "user", "parts": SYSTEM_PROMPT}]
+            prompt = SCENARIOS.get(scenario, SCENARIOS["jy"])
+            messages = [{"role": "user", "parts": prompt}]
             for h in history:
                 messages.append({"role": "user",  "parts": h["user"]})
                 messages.append({"role": "model", "parts": h["gm"]})
