@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>金庸武俠世界 ‧ AI RPG</title>
+<title>AI RPG</title>
 <!-- 圖片生成功能已移除，避免顯示「【系統】插圖生成失敗」訊息 -->
 <style>
 body{font-family:system-ui;padding:0 1rem;max-width:680px;margin:auto}
@@ -10,12 +10,14 @@ h1{display:flex;align-items:center;gap:.4rem}
 #log{white-space:pre-wrap;background:#f7f7f7;padding:1rem;
      border-radius:8px;height:55vh;overflow:auto}
 #options{margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap}
+#scenario{margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap}
 #msg{width:100%;padding:.6rem;border-radius:6px;border:1px solid #ccc;margin-top:.8rem}
 button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;background:#0070f3;color:#fff}
 </style>
-<h1>🥐 金庸武俠世界 • 文字冒險</h1>
+<h1 id="title">🥐 AI RPG</h1>
 
 <div id="log">(故事開始！請輸入你的動作…)</div>
+<div id="scenario"></div>
 <div id="options"></div>
 
 <input id="msg" placeholder="輸入動作／例如：『我舉劍衝向機械巨龍』"/>
@@ -24,17 +26,56 @@ button{margin-top:.5rem;padding:.5rem 1.2rem;border:0;border-radius:6px;backgrou
 <p style="text-align:center;margin-top:1rem">遊戲設計：李詩民</p>
 
 <script>
+const titleEl = document.getElementById('title');
 const log   = document.getElementById('log');
 const msgIn = document.getElementById('msg');
 const opts  = document.getElementById('options');
+const scn   = document.getElementById('scenario');
 const newBtn = document.getElementById('newgame');
 const histKey="rpg_history";
+const scnKey="rpg_scn";
 let history = JSON.parse(localStorage.getItem(histKey)||"[]");
+let scenario = localStorage.getItem(scnKey);
+
+const scenarios = {
+  jy:{
+    label:"金庸群俠穿越傳",
+    background:"你穿越到金庸武俠世界，與各路俠客相遇。"
+  },
+  sg:{
+    label:"三國群雄穿越傳",
+    background:"你來到烽火連天的三國時代，豪傑並起。"
+  }
+};
+
+function showScenarioSelect(){
+  log.textContent = '請選擇故事：';
+  scn.innerHTML = '';
+  for(const [key,sc] of Object.entries(scenarios)){
+    const btn = document.createElement('button');
+    btn.textContent = sc.label;
+    btn.onclick = ()=>{
+      scenario = key;
+      localStorage.setItem(scnKey,scenario);
+      titleEl.textContent = `🥐 ${sc.label} • 文字冒險`;
+      log.textContent = sc.background + '\n\n(故事開始！請輸入你的動作…)';
+      scn.innerHTML = '';
+      opts.innerHTML = '';
+    };
+    scn.appendChild(btn);
+  }
+}
 
 // 載入舊劇情
-history.forEach(h=>{
-  log.textContent += `\n\n【你】\n${h.user}\n\n【GM】\n${h.gm}`;
-});
+if(history.length){
+  const sc = scenarios[scenario];
+  if(sc) titleEl.textContent = `🥐 ${sc.label} • 文字冒險`;
+  history.forEach(h=>{
+    log.textContent += `\n\n【你】\n${h.user}\n\n【GM】\n${h.gm}`;
+  });
+}else{
+  showScenarioSelect();
+}
 
 function add(text, who){
   log.textContent += `\n\n【${who}】\n`+ text;
@@ -62,10 +103,12 @@ function stripOptions(text){
 
 function newGame(){
   history = [];
+  scenario = null;
   localStorage.removeItem(histKey);
-  log.textContent = '(故事開始！請輸入你的動作…)';
+  localStorage.removeItem(scnKey);
   opts.innerHTML = '';
   msgIn.value = '';
+  showScenarioSelect();
 }
 
 async function send(){
@@ -81,7 +124,7 @@ async function send(){
 
   const res = await fetch("/api/rpg",{
     method:"POST",
-    body: JSON.stringify({user, history})
+    body: JSON.stringify({user, history, scenario})
   });
   const data = await res.json();
   if(data.error){ add("⚠️ "+data.error,"系統"); return;}
